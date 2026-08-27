@@ -87,17 +87,30 @@ fun PermissionSetupStep(
 
         // Android 13/14 Sideload Unblock Guidance
         CalmCard {
-            Text(
-                text = "Android Security Tip (Sideloaded APKs)",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "If Android reports 'Restricted setting unavailable', go to System Settings -> Apps -> Anti-Distraction -> tap (⋮) menu at top right -> select 'Allow restricted settings'.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column {
+                Text(
+                    text = "Android 13/14 Security Tip",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "If Android says 'Restricted setting unavailable', tap the button below -> tap the 3 dots (⋮) in the top-right -> select 'Allow restricted settings'.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                CalmButton(
+                    text = "Open App Info Page to Unblock",
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = android.net.Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
+                    },
+                    variant = CalmButtonVariant.SECONDARY
+                )
+            }
         }
     }
 }

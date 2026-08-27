@@ -1,7 +1,9 @@
 # Anti-Distraction
 
+![Anti-Distraction Logo](app/src/main/res/drawable/logo_header.png)
+
 [![Android CI](https://github.com/your-username/anti-distraction/actions/workflows/android-ci.yml/badge.svg)](https://github.com/your-username/anti-distraction/actions/workflows/android-ci.yml)
-[![License: MIT](https.img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Target SDK: 34](https://img.shields.io/badge/Target%20SDK-34-green.svg)](app/build.gradle.kts)
 [![Kotlin: 2.0.21](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg)](app/build.gradle.kts)
 

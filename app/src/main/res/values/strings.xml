@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Anti-Distraction</string>
+    <string name="accessibility_service_description">Anti-Distraction uses this service to detect when restricted applications are opened during your focus sessions and present conscious friction intervention screens.</string>
+</resources>

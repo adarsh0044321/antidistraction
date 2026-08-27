@@ -1,0 +1,37 @@
+# Android & Gradle Build Outputs
+.gradle/
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Signing Keystores & Secrets
+*.jks
+*.keystore
+*.pepk
+release-key.jks
+.env
+
+# IDE & OS Metadata
+.idea/
+*.iml
+*.iws
+*.ipr
+.navigation/
+.DS_Store
+Thumbs.db
+
+# Antigravity Internal Memory & Agent Trajectories (Kept local, excluded from public git)
+HANDOVER.md
+SESSION.md
+ROADMAP.md
+DEVICE_TEST_MATRIX.md
+BRAIN.md
+DECISIONS.md
+SECURITY_AUDIT.md
+PHASE_35_VERIFICATION.md
+RELEASE_READINESS.md
+.gemini/
+*.log

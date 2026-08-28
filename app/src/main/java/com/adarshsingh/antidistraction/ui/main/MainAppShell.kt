@@ -3,9 +3,11 @@ package com.adarshsingh.antidistraction.ui.main
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +25,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.adarshsingh.antidistraction.ui.alarms.AlarmsScreen
+import com.adarshsingh.antidistraction.ui.alarms.AlarmsViewModel
 import com.adarshsingh.antidistraction.ui.analytics.AnalyticsScreen
 import com.adarshsingh.antidistraction.ui.analytics.AnalyticsViewModel
 import com.adarshsingh.antidistraction.ui.apps.AppManagementScreen
@@ -31,9 +35,13 @@ import com.adarshsingh.antidistraction.ui.focus.FocusScreen
 import com.adarshsingh.antidistraction.ui.focus.FocusViewModel
 import com.adarshsingh.antidistraction.ui.rules.RulesScreen
 import com.adarshsingh.antidistraction.ui.rules.RulesViewModel
+import com.adarshsingh.antidistraction.ui.today.TodayScreen
+import com.adarshsingh.antidistraction.ui.today.TodayViewModel
 
 sealed class NavigationTab(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Focus : NavigationTab("focus", "Focus", Icons.Default.Home)
+    object Today : NavigationTab("today", "Today", Icons.Default.DateRange)
+    object Alarms : NavigationTab("alarms", "Alarms", Icons.Default.Notifications)
     object Apps : NavigationTab("apps", "Apps", Icons.Default.Menu)
     object Rules : NavigationTab("rules", "Rules", Icons.Default.Settings)
     object Analytics : NavigationTab("analytics", "Analytics", Icons.Default.Info)
@@ -41,6 +49,8 @@ sealed class NavigationTab(val route: String, val title: String, val icon: andro
 
 val NAVIGATION_TABS = listOf(
     NavigationTab.Focus,
+    NavigationTab.Today,
+    NavigationTab.Alarms,
     NavigationTab.Apps,
     NavigationTab.Rules,
     NavigationTab.Analytics
@@ -96,6 +106,14 @@ fun MainAppShell(modifier: Modifier = Modifier) {
             composable(NavigationTab.Focus.route) {
                 val focusViewModel: FocusViewModel = hiltViewModel()
                 FocusScreen(viewModel = focusViewModel)
+            }
+            composable(NavigationTab.Today.route) {
+                val todayViewModel: TodayViewModel = hiltViewModel()
+                TodayScreen(viewModel = todayViewModel)
+            }
+            composable(NavigationTab.Alarms.route) {
+                val alarmsViewModel: AlarmsViewModel = hiltViewModel()
+                AlarmsScreen(viewModel = alarmsViewModel)
             }
             composable(NavigationTab.Apps.route) {
                 val appViewModel: AppManagementViewModel = hiltViewModel()

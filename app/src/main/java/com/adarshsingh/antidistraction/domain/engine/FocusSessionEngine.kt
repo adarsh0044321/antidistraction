@@ -169,7 +169,7 @@ class FocusSessionEngine @Inject constructor(
         timerJob = scope.launch {
             while (isActive) {
                 updateTimerCalculation()
-                delay(1000L)
+                delay(200L)
             }
         }
     }

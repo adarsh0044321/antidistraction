@@ -25,6 +25,20 @@ import com.adarshsingh.antidistraction.ui.components.CalmCard
 import com.adarshsingh.antidistraction.ui.components.CalmEmptyState
 import com.adarshsingh.antidistraction.ui.components.CalmTopBar
 
+private fun formatAppLabel(packageName: String): String {
+    return when {
+        packageName.contains("instagram", ignoreCase = true) -> "Instagram"
+        packageName.contains("whatsapp", ignoreCase = true) -> "WhatsApp"
+        packageName.contains("youtube", ignoreCase = true) -> "YouTube"
+        packageName.contains("facebook", ignoreCase = true) -> "Facebook"
+        packageName.contains("twitter", ignoreCase = true) -> "Twitter / X"
+        packageName.contains("tiktok", ignoreCase = true) -> "TikTok"
+        packageName.contains("snapchat", ignoreCase = true) -> "Snapchat"
+        packageName.contains("reddit", ignoreCase = true) -> "Reddit"
+        else -> packageName.substringAfterLast('.').replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    }
+}
+
 @Composable
 fun RulesScreen(
     viewModel: RulesViewModel,
@@ -74,6 +88,7 @@ fun RulesScreen(
                         val mins = diffMs / 60000L
                         val secs = (diffMs % 60000L) / 1000L
                         val formattedRemaining = if (mins > 0) "${mins}m ${secs}s remaining" else "${secs}s remaining"
+                        val appTitle = formatAppLabel(exception.packageName)
 
                         CalmCard {
                             Row(
@@ -82,9 +97,15 @@ fun RulesScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = exception.packageName,
+                                        text = appTitle,
                                         style = MaterialTheme.typography.titleLarge,
                                         color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = exception.packageName,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.tertiary
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(

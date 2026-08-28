@@ -98,26 +98,86 @@ fun FocusScreen(
                 }
             )
 
-            // Duration Pickers & Custom Slider when IDLE
+            // Duration Pickers & + Custom Dialog when IDLE
             if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Focus Style Selector
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Focus Style: ",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                        var showStylePicker by remember { mutableStateOf(false) }
+                        var selectedMode by remember { mutableStateOf(FocusMode.DEEP_FOCUS) }
+
+                        CalmChip(
+                            text = selectedMode.name.replace("_", " "),
+                            isSelected = true,
+                            onClick = { showStylePicker = true }
+                        )
+
+                        if (showStylePicker) {
+                            CalmDialog(
+                                title = "Select Focus Style",
+                                message = "Choose the focus profile for your session:",
+                                confirmText = "Close",
+                                dismissText = null,
+                                onConfirm = { showStylePicker = false },
+                                onDismiss = { showStylePicker = false }
+                            )
+                        }
+                    }
+
+                    // Preset & Custom Chips
+                    var showCustomDialog by remember { mutableStateOf(false) }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        listOf(15, 25, 45, 60, 90, 120).forEach { mins ->
+                        listOf(15, 25, 45, 60).forEach { mins ->
                             CalmChip(
                                 text = "$mins m",
                                 isSelected = selectedDurationMinutes == mins,
                                 onClick = { selectedDurationMinutes = mins }
                             )
                         }
+                        CalmChip(
+                            text = "+ Custom",
+                            isSelected = selectedDurationMinutes !in listOf(15, 25, 45, 60),
+                            onClick = { showCustomDialog = true }
+                        )
                     }
+
+                    if (showCustomDialog) {
+                        var customInput by remember { mutableStateOf(selectedDurationMinutes.toString()) }
+                        CalmDialog(
+                            title = "Custom Duration",
+                            message = "Enter target focus duration in minutes (5 to 300 minutes):",
+                            confirmText = "Set Duration",
+                            dismissText = "Cancel",
+                            onConfirm = {
+                                val parsed = customInput.toIntOrNull()
+                                if (parsed != null && parsed in 5..300) {
+                                    selectedDurationMinutes = parsed
+                                }
+                                showCustomDialog = false
+                            },
+                            onDismiss = { showCustomDialog = false }
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Custom Duration: $selectedDurationMinutes mins",
+                        text = "Selected Duration: $selectedDurationMinutes mins",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

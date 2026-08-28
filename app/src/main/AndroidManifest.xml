@@ -90,6 +90,11 @@
             android:name=".receiver.ScheduleAlarmReceiver"
             android:exported="false" />
 
+        <!-- Wake Alarm Receiver -->
+        <receiver
+            android:name=".receiver.WakeAlarmReceiver"
+            android:exported="false" />
+
     </application>
 
 </manifest>

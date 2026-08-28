@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.antigravity.antidistraction"
+    namespace = "com.adarshsingh.antidistraction"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.antigravity.antidistraction"
+        applicationId = "com.adarshsingh.antidistraction"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

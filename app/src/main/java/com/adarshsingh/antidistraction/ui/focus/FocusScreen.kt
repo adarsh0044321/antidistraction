@@ -25,6 +25,7 @@ import com.adarshsingh.antidistraction.domain.model.FocusMode
 import com.adarshsingh.antidistraction.domain.model.FocusState
 import com.adarshsingh.antidistraction.ui.components.CalmButton
 import com.adarshsingh.antidistraction.ui.components.CalmButtonVariant
+import com.adarshsingh.antidistraction.ui.components.CalmCard
 import com.adarshsingh.antidistraction.ui.components.CalmChip
 import com.adarshsingh.antidistraction.ui.components.CalmDialog
 import com.adarshsingh.antidistraction.ui.components.CalmTimerDisplay
@@ -36,8 +37,13 @@ fun FocusScreen(
     modifier: Modifier = Modifier
 ) {
     val sessionState by viewModel.sessionState.collectAsState()
+
+    // Top-level state holders for Dialogs & Controls
     var selectedDurationMinutes by remember { mutableStateOf(25) }
+    var selectedMode by remember { mutableStateOf(FocusMode.DEEP_FOCUS) }
     var showAbandonDialog by remember { mutableStateOf(false) }
+    var showCustomDialog by remember { mutableStateOf(false) }
+    var showStylePicker by remember { mutableStateOf(false) }
 
     val remainingMinutes = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
         selectedDurationMinutes
@@ -98,10 +104,10 @@ fun FocusScreen(
                 }
             )
 
-            // Duration Pickers & + Custom Dialog when IDLE
+            // Duration Pickers & Focus Style Switcher when IDLE
             if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Focus Style Selector
+                    // Focus Style Switcher Button
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -114,29 +120,14 @@ fun FocusScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.tertiary
                         )
-                        var showStylePicker by remember { mutableStateOf(false) }
-                        var selectedMode by remember { mutableStateOf(FocusMode.DEEP_FOCUS) }
-
                         CalmChip(
                             text = selectedMode.name.replace("_", " "),
                             isSelected = true,
                             onClick = { showStylePicker = true }
                         )
-
-                        if (showStylePicker) {
-                            CalmDialog(
-                                title = "Select Focus Style",
-                                message = "Choose the focus profile for your session:",
-                                confirmText = "Close",
-                                dismissText = null,
-                                onConfirm = { showStylePicker = false },
-                                onDismiss = { showStylePicker = false }
-                            )
-                        }
                     }
 
-                    // Preset & Custom Chips
-                    var showCustomDialog by remember { mutableStateOf(false) }
+                    // Preset Chips + Custom Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -155,27 +146,9 @@ fun FocusScreen(
                         )
                     }
 
-                    if (showCustomDialog) {
-                        var customInput by remember { mutableStateOf(selectedDurationMinutes.toString()) }
-                        CalmDialog(
-                            title = "Custom Duration",
-                            message = "Enter target focus duration in minutes (5 to 300 minutes):",
-                            confirmText = "Set Duration",
-                            dismissText = "Cancel",
-                            onConfirm = {
-                                val parsed = customInput.toIntOrNull()
-                                if (parsed != null && parsed in 5..300) {
-                                    selectedDurationMinutes = parsed
-                                }
-                                showCustomDialog = false
-                            },
-                            onDismiss = { showCustomDialog = false }
-                        )
-                    }
-
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Selected Duration: $selectedDurationMinutes mins",
+                        text = "Selected Duration: $selectedDurationMinutes mins (${selectedDurationMinutes / 60}h ${selectedDurationMinutes % 60}m)",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -191,7 +164,7 @@ fun FocusScreen(
                     FocusState.IDLE, FocusState.FOCUS_COMPLETED, FocusState.FOCUS_ABANDONED -> {
                         CalmButton(
                             text = "Start Focus",
-                            onClick = { viewModel.startSession(selectedDurationMinutes, FocusMode.DEEP_FOCUS) },
+                            onClick = { viewModel.startSession(selectedDurationMinutes, selectedMode) },
                             variant = CalmButtonVariant.PRIMARY,
                             modifier = Modifier.fillMaxWidth(0.8f)
                         )
@@ -232,6 +205,7 @@ fun FocusScreen(
         }
     }
 
+    // 1. Abandon Session Confirmation Dialog
     if (showAbandonDialog) {
         CalmDialog(
             title = "End Focus Session?",
@@ -245,5 +219,120 @@ fun FocusScreen(
             },
             onDismiss = { showAbandonDialog = false }
         )
+    }
+
+    // 2. Interactive Custom Duration Dialog
+    if (showCustomDialog) {
+        var tempMinutes by remember { mutableStateOf(selectedDurationMinutes) }
+
+        CalmDialog(
+            title = "Custom Focus Duration",
+            message = "Select or adjust your target focus duration:",
+            confirmText = "Set ${tempMinutes}m",
+            dismissText = "Cancel",
+            onConfirm = {
+                selectedDurationMinutes = tempMinutes
+                showCustomDialog = false
+            },
+            onDismiss = { showCustomDialog = false }
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Quick Hour/Minute Preset Chips
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    listOf(30, 90, 120, 180).forEach { mins ->
+                        val label = if (mins >= 60) "${mins / 60}h" else "${mins}m"
+                        CalmChip(
+                            text = label,
+                            isSelected = tempMinutes == mins,
+                            onClick = { tempMinutes = mins }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Stepper Controls (-15m, -5m, +5m, +15m)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CalmButton(
+                        text = "-15m",
+                        onClick = { tempMinutes = maxOf(5, tempMinutes - 15) },
+                        variant = CalmButtonVariant.SECONDARY
+                    )
+                    CalmButton(
+                        text = "-5m",
+                        onClick = { tempMinutes = maxOf(5, tempMinutes - 5) },
+                        variant = CalmButtonVariant.SECONDARY
+                    )
+                    Text(
+                        text = "${tempMinutes}m",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    CalmButton(
+                        text = "+5m",
+                        onClick = { tempMinutes = minOf(300, tempMinutes + 5) },
+                        variant = CalmButtonVariant.SECONDARY
+                    )
+                    CalmButton(
+                        text = "+15m",
+                        onClick = { tempMinutes = minOf(300, tempMinutes + 15) },
+                        variant = CalmButtonVariant.SECONDARY
+                    )
+                }
+            }
+        }
+    }
+
+    // 3. Interactive Focus Style Switcher Dialog
+    if (showStylePicker) {
+        CalmDialog(
+            title = "Select Focus Profile",
+            message = "Choose the protection profile for your upcoming focus session:",
+            confirmText = "Done",
+            dismissText = null,
+            onConfirm = { showStylePicker = false },
+            onDismiss = { showStylePicker = false }
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FocusMode.values().forEach { mode ->
+                    CalmCard {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = mode.name.replace("_", " "),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = if (selectedMode == mode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            CalmChip(
+                                text = if (selectedMode == mode) "Active ✓" else "Select",
+                                isSelected = selectedMode == mode,
+                                onClick = {
+                                    selectedMode = mode
+                                    showStylePicker = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

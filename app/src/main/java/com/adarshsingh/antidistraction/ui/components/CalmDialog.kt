@@ -27,7 +27,8 @@ fun CalmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     dismissText: String? = null,
-    isDanger: Boolean = false
+    isDanger: Boolean = false,
+    content: (@Composable () -> Unit)? = null
 ) {
     BasicAlertDialog(
         onDismissRequest = onDismiss
@@ -55,6 +56,11 @@ fun CalmDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                if (content != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    content()
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 

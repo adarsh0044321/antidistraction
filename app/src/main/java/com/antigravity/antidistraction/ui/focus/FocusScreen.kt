@@ -39,8 +39,16 @@ fun FocusScreen(
     var selectedDurationMinutes by remember { mutableStateOf(25) }
     var showAbandonDialog by remember { mutableStateOf(false) }
 
-    val remainingMinutes = sessionState.remainingSeconds / 60
-    val remainingSecs = sessionState.remainingSeconds % 60
+    val remainingMinutes = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
+        selectedDurationMinutes
+    } else {
+        sessionState.remainingSeconds / 60
+    }
+    val remainingSecs = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
+        0
+    } else {
+        sessionState.remainingSeconds % 60
+    }
     val formattedTime = String.format(Locale.getDefault(), "%02d:%02d", remainingMinutes, remainingSecs)
 
     Scaffold(
@@ -82,7 +90,7 @@ fun FocusScreen(
             // Radial Timer Centerpiece
             CalmTimerDisplay(
                 remainingTimeText = formattedTime,
-                progressFraction = sessionState.progressFraction,
+                progressFraction = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) 1.0f else sessionState.progressFraction,
                 statusLabel = when (sessionState.state) {
                     FocusState.FOCUS_ACTIVE, FocusState.RESUMED -> "Focusing"
                     FocusState.PAUSED -> "Paused"
@@ -90,19 +98,27 @@ fun FocusScreen(
                 }
             )
 
-            // Duration Pickers when IDLE
+            // Duration Pickers & Custom Slider when IDLE
             if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    listOf(15, 25, 45, 60).forEach { mins ->
-                        CalmChip(
-                            text = "$mins m",
-                            isSelected = selectedDurationMinutes == mins,
-                            onClick = { selectedDurationMinutes = mins }
-                        )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        listOf(15, 25, 45, 60, 90, 120).forEach { mins ->
+                            CalmChip(
+                                text = "$mins m",
+                                isSelected = selectedDurationMinutes == mins,
+                                onClick = { selectedDurationMinutes = mins }
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Custom Duration: $selectedDurationMinutes mins",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
                 }
             }
 

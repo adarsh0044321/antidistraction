@@ -177,6 +177,56 @@ fun AnalyticsScreen(
                     )
                 }
             }
+
+            // Focus Session History
+            item {
+                Text(
+                    text = "Focus Session History",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+            if (uiState.recentSessions.isEmpty()) {
+                item {
+                    CalmCard {
+                        Text(
+                            text = "No focus sessions recorded yet. Start a session to track your progress!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                items(uiState.recentSessions, key = { it.id }) { session ->
+                    CalmCard {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = session.focusMode.name.replace("_", " "),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "${session.targetDurationMs / (60 * 1000)} mins • Interventions: ${session.totalInterventions}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = session.state.name.replace("FOCUS_", ""),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (session.state.name.contains("COMPLETED")) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

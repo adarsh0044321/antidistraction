@@ -113,6 +113,49 @@ fun AnalyticsScreen(
             // Behavioral Insights
             item {
                 Text(
+                    text = "Focus Badges & Achievements",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+            items(uiState.badges, key = { it.id }) { badge ->
+                CalmCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = badge.iconEmoji,
+                            style = MaterialTheme.typography.displayLarge
+                        )
+                        Spacer(modifier = Modifier.padding(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = badge.title,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = if (badge.isUnlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = badge.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = badge.progressText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (badge.isUnlocked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Behavioral Insights
+            item {
+                Text(
                     text = "Behavioral Insights",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground

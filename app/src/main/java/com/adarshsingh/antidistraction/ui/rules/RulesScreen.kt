@@ -29,7 +29,9 @@ import com.adarshsingh.antidistraction.ui.components.CalmTopBar
 fun RulesScreen(
     viewModel: RulesViewModel,
     modifier: Modifier = Modifier,
-    onBackClick: (() -> Unit)? = null
+    isDarkMode: Boolean = false,
+    onBackClick: (() -> Unit)? = null,
+    onToggleDarkMode: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -38,7 +40,9 @@ fun RulesScreen(
         topBar = {
             CalmTopBar(
                 title = "Restriction Rules & Active Exceptions",
-                onBackClick = onBackClick
+                isDarkMode = isDarkMode,
+                onBackClick = onBackClick,
+                onToggleDarkMode = onToggleDarkMode
             )
         }
     ) { innerPadding ->
@@ -59,14 +63,18 @@ fun RulesScreen(
             if (uiState.activeExceptions.isEmpty()) {
                 CalmEmptyState(
                     title = "No Active Temporary Exceptions",
-                    description = "Temporary exceptions requested during bypass checks will appear here with expiration times."
+                    description = "Temporary exceptions requested during bypass checks will appear here with live countdown expiration timers."
                 )
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.activeExceptions, key = { it.packageName }) { exception ->
-                        val remainingMins = (exception.expirationTimestampMs - System.currentTimeMillis()) / 60000L
+                        val diffMs = (exception.expirationTimestampMs - System.currentTimeMillis()).coerceAtLeast(0L)
+                        val mins = diffMs / 60000L
+                        val secs = (diffMs % 60000L) / 1000L
+                        val formattedRemaining = if (mins > 0) "${mins}m ${secs}s remaining" else "${secs}s remaining"
+
                         CalmCard {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -80,9 +88,9 @@ fun RulesScreen(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Reason: ${exception.grantedReason} • ${remainingMins}m remaining",
+                                        text = "Reason: ${exception.grantedReason} • $formattedRemaining",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 CalmButton(

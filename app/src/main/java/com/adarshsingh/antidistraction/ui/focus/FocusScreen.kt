@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -279,29 +283,34 @@ fun FocusScreen(
                 // Stepper Buttons Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CalmButton(
-                        text = "-15m",
-                        onClick = { tempMinutes = maxOf(5, tempMinutes - 15) },
-                        variant = CalmButtonVariant.SECONDARY
+                    val stepperList = listOf(
+                        "-15m" to { tempMinutes = maxOf(5, tempMinutes - 15) },
+                        "-5m" to { tempMinutes = maxOf(5, tempMinutes - 5) },
+                        "+5m" to { tempMinutes = minOf(300, tempMinutes + 5) },
+                        "+15m" to { tempMinutes = minOf(300, tempMinutes + 15) }
                     )
-                    CalmButton(
-                        text = "-5m",
-                        onClick = { tempMinutes = maxOf(5, tempMinutes - 5) },
-                        variant = CalmButtonVariant.SECONDARY
-                    )
-                    CalmButton(
-                        text = "+5m",
-                        onClick = { tempMinutes = minOf(300, tempMinutes + 5) },
-                        variant = CalmButtonVariant.SECONDARY
-                    )
-                    CalmButton(
-                        text = "+15m",
-                        onClick = { tempMinutes = minOf(300, tempMinutes + 15) },
-                        variant = CalmButtonVariant.SECONDARY
-                    )
+
+                    stepperList.forEach { (label, action) ->
+                        OutlinedButton(
+                            onClick = action,
+                            modifier = Modifier.weight(1f).height(44.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Clip
+                            )
+                        }
+                    }
                 }
             }
         }

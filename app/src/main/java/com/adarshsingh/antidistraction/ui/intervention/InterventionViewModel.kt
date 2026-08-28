@@ -2,6 +2,7 @@ package com.adarshsingh.antidistraction.ui.intervention
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.adarshsingh.antidistraction.data.preferences.UserPreferencesRepository
 import com.adarshsingh.antidistraction.domain.engine.InterventionEngine
 import com.adarshsingh.antidistraction.domain.engine.RestrictionEngine
 import com.adarshsingh.antidistraction.domain.model.IntentionType
@@ -13,7 +14,8 @@ import javax.inject.Inject
 @HiltViewModel
 class InterventionViewModel @Inject constructor(
     private val interventionEngine: InterventionEngine,
-    private val restrictionEngine: RestrictionEngine
+    private val restrictionEngine: RestrictionEngine,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     fun recordReturnedToFocus(packageName: String, intention: IntentionType?) {
@@ -36,6 +38,7 @@ class InterventionViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
+            userPreferencesRepository.setActiveException(packageName, durationMinutes * 60_000L)
             interventionEngine.recordAttempt(
                 packageName = packageName,
                 intention = intention,

@@ -132,11 +132,11 @@ fun MainAppShell(
             }
             composable(NavigationTab.Rules.route) {
                 val rulesViewModel: RulesViewModel = hiltViewModel()
-                RulesScreen(viewModel = rulesViewModel)
+                RulesScreen(viewModel = rulesViewModel, isDarkMode = isDarkMode, onToggleDarkMode = onToggleDarkMode)
             }
             composable(NavigationTab.Analytics.route) {
                 val analyticsViewModel: AnalyticsViewModel = hiltViewModel()
-                AnalyticsScreen(viewModel = analyticsViewModel)
+                AnalyticsScreen(viewModel = analyticsViewModel, isDarkMode = isDarkMode, onToggleDarkMode = onToggleDarkMode)
             }
         }
     }

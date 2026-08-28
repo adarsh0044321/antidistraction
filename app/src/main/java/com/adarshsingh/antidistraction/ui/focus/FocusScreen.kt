@@ -35,6 +35,7 @@ import java.util.Locale
 fun FocusScreen(
     viewModel: FocusViewModel,
     modifier: Modifier = Modifier,
+    isDarkMode: Boolean = false,
     onToggleDarkMode: (() -> Unit)? = null
 ) {
     val sessionState by viewModel.sessionState.collectAsState()
@@ -63,6 +64,7 @@ fun FocusScreen(
         topBar = {
             com.adarshsingh.antidistraction.ui.components.CalmTopBar(
                 title = "Anti-Distraction",
+                isDarkMode = isDarkMode,
                 onToggleDarkMode = onToggleDarkMode
             )
         }

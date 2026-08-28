@@ -116,15 +116,15 @@ fun MainAppShell(
         ) {
             composable(NavigationTab.Focus.route) {
                 val focusViewModel: FocusViewModel = hiltViewModel()
-                FocusScreen(viewModel = focusViewModel, onToggleDarkMode = onToggleDarkMode)
+                FocusScreen(viewModel = focusViewModel, isDarkMode = isDarkMode, onToggleDarkMode = onToggleDarkMode)
             }
             composable(NavigationTab.Today.route) {
                 val todayViewModel: TodayViewModel = hiltViewModel()
-                TodayScreen(viewModel = todayViewModel, onToggleDarkMode = onToggleDarkMode)
+                TodayScreen(viewModel = todayViewModel, isDarkMode = isDarkMode, onToggleDarkMode = onToggleDarkMode)
             }
             composable(NavigationTab.Alarms.route) {
                 val alarmsViewModel: AlarmsViewModel = hiltViewModel()
-                AlarmsScreen(viewModel = alarmsViewModel, onToggleDarkMode = onToggleDarkMode)
+                AlarmsScreen(viewModel = alarmsViewModel, isDarkMode = isDarkMode, onToggleDarkMode = onToggleDarkMode)
             }
             composable(NavigationTab.Apps.route) {
                 val appViewModel: AppManagementViewModel = hiltViewModel()

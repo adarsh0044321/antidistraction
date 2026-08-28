@@ -42,6 +42,7 @@ import java.util.Locale
 fun AlarmsScreen(
     viewModel: AlarmsViewModel,
     modifier: Modifier = Modifier,
+    isDarkMode: Boolean = false,
     onToggleDarkMode: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,6 +53,7 @@ fun AlarmsScreen(
         topBar = {
             CalmTopBar(
                 title = "Wake Alarms & Sleep Protection",
+                isDarkMode = isDarkMode,
                 onToggleDarkMode = onToggleDarkMode
             )
         },
@@ -222,16 +224,21 @@ private fun AlarmCard(
     onToggle: () -> Unit
 ) {
     val formattedWakeTime = String.format(Locale.getDefault(), "%02d:%02d", alarm.timeHour, alarm.timeMinute)
-    val formattedBedtime = String.format(Locale.getDefault(), "%02d:00", alarm.plannedBedtimeHour)
+    val formattedBedtime = String.format(Locale.getDefault(), "%02d:%02d", alarm.plannedBedtimeHour, alarm.plannedBedtimeMinute)
 
-    // Calculate sleep duration (bedtime -> wake time)
-    val sleepDurationHours = if (alarm.timeHour >= alarm.plannedBedtimeHour) {
-        alarm.timeHour - alarm.plannedBedtimeHour
+    // Calculate exact sleep duration in minutes (bedtime -> wake time)
+    val wakeMinutesTotal = alarm.timeHour * 60 + alarm.timeMinute
+    val bedtimeMinutesTotal = alarm.plannedBedtimeHour * 60 + alarm.plannedBedtimeMinute
+    val diffMinutes = if (wakeMinutesTotal >= bedtimeMinutesTotal) {
+        wakeMinutesTotal - bedtimeMinutesTotal
     } else {
-        (24 - alarm.plannedBedtimeHour) + alarm.timeHour
+        (24 * 60 - bedtimeMinutesTotal) + wakeMinutesTotal
     }
 
-    val isSleepWarning = sleepDurationHours < alarm.minimumSleepDurationHours
+    val sleepHours = diffMinutes / 60
+    val sleepMins = diffMinutes % 60
+    val formattedSleepDuration = String.format(Locale.getDefault(), "%dh %02dm", sleepHours, sleepMins)
+    val isSleepWarning = sleepHours < alarm.minimumSleepDurationHours
 
     CalmCard {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -271,7 +278,7 @@ private fun AlarmCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Planned Sleep: ${sleepDurationHours}h 00m",
+                    text = "Planned Sleep: $formattedSleepDuration",
                     style = MaterialTheme.typography.labelSmall,
                     color = if (isSleepWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
                 )

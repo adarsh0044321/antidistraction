@@ -40,6 +40,7 @@ import com.adarshsingh.antidistraction.ui.components.CalmTopBar
 fun TodayScreen(
     viewModel: TodayViewModel,
     modifier: Modifier = Modifier,
+    isDarkMode: Boolean = false,
     onToggleDarkMode: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -50,6 +51,7 @@ fun TodayScreen(
         topBar = {
             CalmTopBar(
                 title = "Today's Plan & Goals",
+                isDarkMode = isDarkMode,
                 onToggleDarkMode = onToggleDarkMode
             )
         }

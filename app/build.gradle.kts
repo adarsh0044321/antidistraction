@@ -31,20 +31,28 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("release-key.jks")
-            storePassword = "antidistraction123"
-            keyAlias = "antidistraction"
-            keyPassword = "antidistraction123"
-            enableV1Signing = true
-            enableV2Signing = true
-            enableV3Signing = true
+            val keystoreFile = file("release-key.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "antidistraction123"
+                keyAlias = "antidistraction"
+                keyPassword = "antidistraction123"
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            val keystoreFile = file("release-key.jks")
+            if (keystoreFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

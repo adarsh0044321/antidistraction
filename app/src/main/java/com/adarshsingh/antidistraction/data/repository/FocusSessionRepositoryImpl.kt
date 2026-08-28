@@ -53,4 +53,8 @@ class FocusSessionRepositoryImpl @Inject constructor(
     override fun getAllSessions(): Flow<List<FocusSessionEntity>> {
         return sessionDao.getAllSessionsFlow()
     }
+
+    override suspend fun incrementInterventionCount(sessionId: Long) {
+        sessionDao.incrementInterventionCount(sessionId)
+    }
 }

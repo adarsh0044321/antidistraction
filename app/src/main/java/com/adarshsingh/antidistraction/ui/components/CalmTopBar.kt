@@ -58,6 +58,6 @@ fun CalmTopBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background
         ),
-        windowInsets = TopAppBarDefaults.windowInsets
+        windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0)
     )
 }

@@ -35,7 +35,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: app/build/outputs/apk/debug/Anti-Distraction-debug.apk
           name: Anti-Distraction ${{ github.ref_name }}
           draft: false
           prerelease: false

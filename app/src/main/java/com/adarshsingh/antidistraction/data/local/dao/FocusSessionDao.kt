@@ -28,4 +28,10 @@ interface FocusSessionDao {
 
     @Query("SELECT * FROM focus_sessions WHERE startTimeMs >= :startTimeMs ORDER BY startTimeMs DESC")
     fun getSessionsSinceFlow(startTimeMs: Long): Flow<List<FocusSessionEntity>>
+
+    @Query("UPDATE focus_sessions SET totalInterventions = totalInterventions + 1 WHERE id = :sessionId")
+    suspend fun incrementInterventionCount(sessionId: Long)
+
+    @Query("UPDATE focus_sessions SET totalBypasses = totalBypasses + 1 WHERE id = :sessionId")
+    suspend fun incrementBypassCount(sessionId: Long)
 }

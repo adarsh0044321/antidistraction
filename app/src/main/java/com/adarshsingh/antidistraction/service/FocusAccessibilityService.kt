@@ -81,6 +81,9 @@ class FocusAccessibilityService : AccessibilityService() {
                     lastInterventionTimestamp = System.currentTimeMillis()
                     Logger.i("FocusAccessibility", "Intercepted restricted package $packageName (${interventionResult.decision.name}). Triggering Intervention screen.")
 
+                    // Increment live intervention count on active session
+                    sessionEngine.recordIntervention()
+
                     // Perform Home Action to step out of target app immediately
                     performGlobalAction(GLOBAL_ACTION_HOME)
 

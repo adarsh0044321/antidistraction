@@ -10,4 +10,5 @@ interface FocusSessionRepository {
     suspend fun getSessionById(sessionId: Long): FocusSessionEntity?
     suspend fun getActiveSession(): FocusSessionEntity?
     fun getAllSessions(): Flow<List<FocusSessionEntity>>
+    suspend fun incrementInterventionCount(sessionId: Long)
 }

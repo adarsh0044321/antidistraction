@@ -247,7 +247,7 @@ private fun AlarmCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = formattedWakeTime,
                         style = MaterialTheme.typography.displayLarge,
@@ -260,6 +260,7 @@ private fun AlarmCard(
                         color = MaterialTheme.colorScheme.tertiary
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
                 Switch(
                     checked = alarm.isEnabled,
                     onCheckedChange = { onToggle() },

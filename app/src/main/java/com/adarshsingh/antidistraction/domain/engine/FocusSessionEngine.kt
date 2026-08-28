@@ -79,6 +79,15 @@ class FocusSessionEngine @Inject constructor(
         }
     }
 
+    fun recordIntervention() {
+        val current = _sessionState.value
+        if (current.sessionId != 0L && (current.state == FocusState.FOCUS_ACTIVE || current.state == FocusState.RESUMED)) {
+            scope.launch {
+                sessionRepository.incrementInterventionCount(current.sessionId)
+            }
+        }
+    }
+
     fun pauseSession() {
         val current = _sessionState.value
         if (current.state == FocusState.FOCUS_ACTIVE || current.state == FocusState.RESUMED) {

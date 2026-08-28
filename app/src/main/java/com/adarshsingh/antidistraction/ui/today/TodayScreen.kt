@@ -2,6 +2,8 @@ package com.adarshsingh.antidistraction.ui.today
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,14 +30,17 @@ import com.adarshsingh.antidistraction.data.local.entity.DailyGoalEntity
 import com.adarshsingh.antidistraction.ui.components.CalmButton
 import com.adarshsingh.antidistraction.ui.components.CalmButtonVariant
 import com.adarshsingh.antidistraction.ui.components.CalmCard
+import com.adarshsingh.antidistraction.ui.components.CalmChip
 import com.adarshsingh.antidistraction.ui.components.CalmDialog
 import com.adarshsingh.antidistraction.ui.components.CalmProgressIndicator
 import com.adarshsingh.antidistraction.ui.components.CalmTopBar
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TodayScreen(
     viewModel: TodayViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onToggleDarkMode: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddGoalDialog by remember { mutableStateOf(false) }
@@ -42,7 +48,10 @@ fun TodayScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            CalmTopBar(title = "Today's Plan & Goals")
+            CalmTopBar(
+                title = "Today's Plan & Goals",
+                onToggleDarkMode = onToggleDarkMode
+            )
         }
     ) { innerPadding ->
         LazyColumn(
@@ -115,22 +124,86 @@ fun TodayScreen(
 
     if (showAddGoalDialog) {
         var goalTitle by remember { mutableStateOf("") }
-        var goalDurationMins by remember { mutableStateOf("60") }
+        var goalDurationMins by remember { mutableStateOf(60) }
+
+        val recommendations = listOf(
+            "📚 Study Java",
+            "💻 Coding Project",
+            "📖 Read 20 Pages",
+            "🏋️ Workout",
+            "🧘 Meditate"
+        )
 
         CalmDialog(
             title = "Add Today's Goal",
-            message = "Define what you want to accomplish today (e.g. Study Java, Reading, Project Work):",
+            message = "Enter your goal title or select a recommended goal below:",
             confirmText = "Save Goal",
             dismissText = "Cancel",
             onConfirm = {
-                val duration = goalDurationMins.toIntOrNull() ?: 60
                 if (goalTitle.isNotBlank()) {
-                    viewModel.addGoal(goalTitle.trim(), duration)
+                    viewModel.addGoal(goalTitle.trim(), goalDurationMins)
+                    showAddGoalDialog = false
                 }
-                showAddGoalDialog = false
             },
             onDismiss = { showAddGoalDialog = false }
-        )
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Interactive Text Input
+                OutlinedTextField(
+                    value = goalTitle,
+                    onValueChange = { goalTitle = it },
+                    label = { Text("Goal Title") },
+                    placeholder = { Text("e.g. Study Java, Reading...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                // Recommendations Label & Flow Chips
+                Text(
+                    text = "Suggested Goals:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    recommendations.forEach { rec ->
+                        CalmChip(
+                            text = rec,
+                            isSelected = goalTitle == rec,
+                            onClick = { goalTitle = rec }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Target Duration Selector
+                Text(
+                    text = "Target Duration:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    listOf(30, 45, 60, 90, 120).forEach { mins ->
+                        val label = if (mins >= 60) "${mins / 60}h" else "${mins}m"
+                        CalmChip(
+                            text = label,
+                            isSelected = goalDurationMins == mins,
+                            onClick = { goalDurationMins = mins }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

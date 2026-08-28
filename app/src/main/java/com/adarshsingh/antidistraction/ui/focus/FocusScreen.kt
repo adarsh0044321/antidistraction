@@ -34,7 +34,8 @@ import java.util.Locale
 @Composable
 fun FocusScreen(
     viewModel: FocusViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onToggleDarkMode: (() -> Unit)? = null
 ) {
     val sessionState by viewModel.sessionState.collectAsState()
 
@@ -58,7 +59,13 @@ fun FocusScreen(
     val formattedTime = String.format(Locale.getDefault(), "%02d:%02d", remainingMinutes, remainingSecs)
 
     Scaffold(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            com.adarshsingh.antidistraction.ui.components.CalmTopBar(
+                title = "Anti-Distraction",
+                onToggleDarkMode = onToggleDarkMode
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -140,7 +147,7 @@ fun FocusScreen(
                             )
                         }
                         CalmChip(
-                            text = "+ Custom",
+                            text = "+",
                             isSelected = selectedDurationMinutes !in listOf(15, 25, 45, 60),
                             onClick = { showCustomDialog = true }
                         )
@@ -240,6 +247,16 @@ fun FocusScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Large Prominent Duration Display
+                Text(
+                    text = "${tempMinutes} min (${tempMinutes / 60}h ${tempMinutes % 60}m)",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 // Quick Hour/Minute Preset Chips
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -257,7 +274,7 @@ fun FocusScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Stepper Controls (-15m, -5m, +5m, +15m)
+                // Stepper Buttons Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -272,11 +289,6 @@ fun FocusScreen(
                         text = "-5m",
                         onClick = { tempMinutes = maxOf(5, tempMinutes - 5) },
                         variant = CalmButtonVariant.SECONDARY
-                    )
-                    Text(
-                        text = "${tempMinutes}m",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary
                     )
                     CalmButton(
                         text = "+5m",

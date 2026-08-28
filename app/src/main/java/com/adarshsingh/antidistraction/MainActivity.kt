@@ -23,7 +23,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AntiDistractionTheme {
+            val isDarkMode by mainViewModel.isDarkMode.collectAsState()
+
+            AntiDistractionTheme(darkTheme = isDarkMode) {
                 val isFirstLaunch by mainViewModel.isFirstLaunch.collectAsState()
 
                 if (isFirstLaunch) {
@@ -35,7 +37,10 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 } else {
-                    MainAppShell()
+                    MainAppShell(
+                        isDarkMode = isDarkMode,
+                        onToggleDarkMode = { mainViewModel.toggleDarkMode() }
+                    )
                 }
             }
         }

@@ -44,7 +44,7 @@ sealed class NavigationTab(val route: String, val title: String, val icon: andro
     object Alarms : NavigationTab("alarms", "Alarms", Icons.Default.Notifications)
     object Apps : NavigationTab("apps", "Apps", Icons.Default.Menu)
     object Rules : NavigationTab("rules", "Rules", Icons.Default.Settings)
-    object Analytics : NavigationTab("analytics", "Analytics", Icons.Default.Info)
+    object Analytics : NavigationTab("analytics", "Stats", Icons.Default.Info)
 }
 
 val NAVIGATION_TABS = listOf(
@@ -57,7 +57,11 @@ val NAVIGATION_TABS = listOf(
 )
 
 @Composable
-fun MainAppShell(modifier: Modifier = Modifier) {
+fun MainAppShell(
+    modifier: Modifier = Modifier,
+    isDarkMode: Boolean = false,
+    onToggleDarkMode: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: NavigationTab.Focus.route
@@ -85,7 +89,14 @@ fun MainAppShell(modifier: Modifier = Modifier) {
                             }
                         },
                         icon = { Icon(imageVector = tab.icon, contentDescription = tab.title) },
-                        label = { Text(text = tab.title, style = MaterialTheme.typography.labelSmall) },
+                        label = {
+                            Text(
+                                text = tab.title,
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -105,15 +116,15 @@ fun MainAppShell(modifier: Modifier = Modifier) {
         ) {
             composable(NavigationTab.Focus.route) {
                 val focusViewModel: FocusViewModel = hiltViewModel()
-                FocusScreen(viewModel = focusViewModel)
+                FocusScreen(viewModel = focusViewModel, onToggleDarkMode = onToggleDarkMode)
             }
             composable(NavigationTab.Today.route) {
                 val todayViewModel: TodayViewModel = hiltViewModel()
-                TodayScreen(viewModel = todayViewModel)
+                TodayScreen(viewModel = todayViewModel, onToggleDarkMode = onToggleDarkMode)
             }
             composable(NavigationTab.Alarms.route) {
                 val alarmsViewModel: AlarmsViewModel = hiltViewModel()
-                AlarmsScreen(viewModel = alarmsViewModel)
+                AlarmsScreen(viewModel = alarmsViewModel, onToggleDarkMode = onToggleDarkMode)
             }
             composable(NavigationTab.Apps.route) {
                 val appViewModel: AppManagementViewModel = hiltViewModel()

@@ -26,6 +26,17 @@ class UserPreferencesRepository @Inject constructor(
         val ACTIVE_PROFILE_ID = longPreferencesKey("active_profile_id")
         val CURRENT_FOCUS_STATE = stringPreferencesKey("current_focus_state")
         val NOTIFICATION_SUPPRESSION_ENABLED = booleanPreferencesKey("notification_suppression_enabled")
+        val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
+    }
+
+    val isDarkModeFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[Keys.IS_DARK_MODE] ?: false
+    }
+
+    suspend fun setDarkMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.IS_DARK_MODE] = enabled
+        }
     }
 
     val isFirstLaunchFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->

@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -29,6 +33,7 @@ import com.adarshsingh.antidistraction.data.local.entity.WakeAlarmEntity
 import com.adarshsingh.antidistraction.ui.components.CalmButton
 import com.adarshsingh.antidistraction.ui.components.CalmButtonVariant
 import com.adarshsingh.antidistraction.ui.components.CalmCard
+import com.adarshsingh.antidistraction.ui.components.CalmChip
 import com.adarshsingh.antidistraction.ui.components.CalmDialog
 import com.adarshsingh.antidistraction.ui.components.CalmTopBar
 import java.util.Locale
@@ -36,7 +41,8 @@ import java.util.Locale
 @Composable
 fun AlarmsScreen(
     viewModel: AlarmsViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onToggleDarkMode: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddAlarmDialog by remember { mutableStateOf(false) }
@@ -44,7 +50,19 @@ fun AlarmsScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            CalmTopBar(title = "Wake Alarms & Sleep Protection")
+            CalmTopBar(
+                title = "Wake Alarms & Sleep Protection",
+                onToggleDarkMode = onToggleDarkMode
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddAlarmDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Alarm")
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -57,29 +75,32 @@ fun AlarmsScreen(
             // Header Card
             item {
                 CalmCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Morning Focus Alarms",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Wake up aligned with your daily attention targets.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.tertiary
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Morning Focus Alarms",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Wake up aligned with your daily attention targets.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            CalmButton(
+                                text = "+ Alarm",
+                                onClick = { showAddAlarmDialog = true },
+                                variant = CalmButtonVariant.PRIMARY
                             )
                         }
-                        CalmButton(
-                            text = "+ Alarm",
-                            onClick = { showAddAlarmDialog = true },
-                            variant = CalmButtonVariant.PRIMARY
-                        )
                     }
                 }
             }
@@ -97,7 +118,7 @@ fun AlarmsScreen(
                 item {
                     CalmCard {
                         Text(
-                            text = "No wake alarms set. Tap '+ Alarm' above to configure your morning wake time and sleep protection!",
+                            text = "No wake alarms set. Tap '+ Alarm' or the floating + button to configure your morning wake time and sleep protection!",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -115,27 +136,83 @@ fun AlarmsScreen(
     }
 
     if (showAddAlarmDialog) {
-        var wakeHourStr by remember { mutableStateOf("7") }
-        var wakeMinuteStr by remember { mutableStateOf("0") }
-        var bedtimeHourStr by remember { mutableStateOf("23") }
+        var selectedWakeHour by remember { mutableStateOf(7) }
+        var selectedWakeMinute by remember { mutableStateOf(0) }
+        var selectedBedtimeHour by remember { mutableStateOf(23) }
+
+        val wakePresets = listOf(
+            Pair(6, 0) to "6:00 AM",
+            Pair(6, 30) to "6:30 AM",
+            Pair(7, 0) to "7:00 AM",
+            Pair(7, 30) to "7:30 AM",
+            Pair(8, 0) to "8:00 AM"
+        )
+
+        val bedtimePresets = listOf(
+            22 to "10:00 PM",
+            23 to "11:00 PM",
+            0 to "12:00 AM"
+        )
 
         CalmDialog(
-            title = "Set Wake Alarm",
-            message = "Enter wake time (0-23 Hour, 0-59 Minute) and planned bedtime hour (e.g. 23 for 11 PM):",
+            title = "Set Morning Wake Alarm",
+            message = "Configure wake-up time and planned bedtime for sleep protection:",
             confirmText = "Set Alarm",
             dismissText = "Cancel",
             onConfirm = {
-                val hour = wakeHourStr.toIntOrNull() ?: 7
-                val minute = wakeMinuteStr.toIntOrNull() ?: 0
-                val bedtime = bedtimeHourStr.toIntOrNull() ?: 23
-
-                if (hour in 0..23 && minute in 0..59) {
-                    viewModel.saveAlarm(hour, minute, bedtime)
-                }
+                viewModel.saveAlarm(selectedWakeHour, selectedWakeMinute, selectedBedtimeHour)
                 showAddAlarmDialog = false
             },
             onDismiss = { showAddAlarmDialog = false }
-        )
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Wake Time Selection
+                Text(
+                    text = "Select Wake Time:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    wakePresets.forEach { (pair, label) ->
+                        CalmChip(
+                            text = label,
+                            isSelected = selectedWakeHour == pair.first && selectedWakeMinute == pair.second,
+                            onClick = {
+                                selectedWakeHour = pair.first
+                                selectedWakeMinute = pair.second
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Bedtime Selection
+                Text(
+                    text = "Planned Bedtime:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    bedtimePresets.forEach { (hour, label) ->
+                        CalmChip(
+                            text = label,
+                            isSelected = selectedBedtimeHour == hour,
+                            onClick = { selectedBedtimeHour = hour }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

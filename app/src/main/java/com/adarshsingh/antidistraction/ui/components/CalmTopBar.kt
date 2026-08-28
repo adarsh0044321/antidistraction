@@ -19,6 +19,7 @@ fun CalmTopBar(
     title: String,
     modifier: Modifier = Modifier,
     onBackClick: (() -> Unit)? = null,
+    onToggleDarkMode: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
@@ -41,7 +42,17 @@ fun CalmTopBar(
                 }
             }
         },
-        actions = actions,
+        actions = {
+            actions()
+            if (onToggleDarkMode != null) {
+                IconButton(onClick = onToggleDarkMode) {
+                    Text(
+                        text = "🌙",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            }
+        },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background
         )

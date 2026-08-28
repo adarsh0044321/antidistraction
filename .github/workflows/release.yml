@@ -29,13 +29,13 @@ jobs:
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug & Test
-        run: ./gradlew assembleDebug compileDebugUnitTestSources --no-daemon
+      - name: Build Signed Release APK & Test
+        run: ./gradlew assembleRelease compileReleaseUnitTestSources --no-daemon
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/Anti-Distraction-debug.apk
+          files: app/build/outputs/apk/release/Anti-Distraction-release.apk
           name: Anti-Distraction ${{ github.ref_name }}
           draft: false
           prerelease: false

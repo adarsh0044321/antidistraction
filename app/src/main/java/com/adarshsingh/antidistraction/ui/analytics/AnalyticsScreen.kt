@@ -240,14 +240,21 @@ fun AnalyticsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
+                                val modeLabel = if (session.focusMode.name == "CHALLENGE") "🏆 Challenge Mode" else session.focusMode.name.replace("_", " ")
+                                val durationMins = if (session.targetDurationMs > 0L) {
+                                    session.targetDurationMs / (60 * 1000)
+                                } else {
+                                    maxOf(1L, ((session.actualEndTimeMs ?: session.startTimeMs) - session.startTimeMs) / (60 * 1000))
+                                }
+
                                 Text(
-                                    text = session.focusMode.name.replace("_", " "),
+                                    text = modeLabel,
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "${session.targetDurationMs / (60 * 1000)} mins • Interventions: ${session.totalInterventions}",
+                                    text = "$durationMins mins • Interventions: ${session.totalInterventions}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -255,7 +262,7 @@ fun AnalyticsScreen(
                             Text(
                                 text = session.state.name.replace("FOCUS_", ""),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (session.state.name.contains("COMPLETED")) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary
+                                color = if (session.state.name.contains("COMPLETED")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
                             )
                         }
                     }

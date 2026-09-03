@@ -21,7 +21,9 @@ class AnalyticsEngine @Inject constructor(
             val abandoned = sessions.count { it.state == FocusState.FOCUS_ABANDONED }
             val totalSessions = completed + abandoned
 
-            val totalFocusTimeMs = sessions.filter { it.state == FocusState.FOCUS_COMPLETED }.sumOf { it.targetDurationMs }
+            val totalFocusTimeMs = sessions.filter { it.state == FocusState.FOCUS_COMPLETED }.sumOf {
+                if (it.targetDurationMs > 0L) it.targetDurationMs else maxOf(0L, (it.actualEndTimeMs ?: it.startTimeMs) - it.startTimeMs)
+            }
             val totalFocusTimeMins = totalFocusTimeMs / (1000 * 60)
 
             val totalInterventions = sessions.sumOf { it.totalInterventions }

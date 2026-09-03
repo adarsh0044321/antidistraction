@@ -2,6 +2,7 @@ package com.adarshsingh.antidistraction.domain.badge
 
 import com.adarshsingh.antidistraction.data.local.dao.FocusSessionDao
 import com.adarshsingh.antidistraction.domain.analytics.AnalyticsEngine
+import com.adarshsingh.antidistraction.domain.model.FocusMode
 import com.adarshsingh.antidistraction.domain.model.FocusState
 import com.adarshsingh.antidistraction.domain.score.FocusScoreEngine
 import kotlinx.coroutines.flow.first
@@ -35,6 +36,11 @@ class FocusBadgeEngine @Inject constructor(
         val totalResisted = summary.resistedAttemptsCount
         val totalFocusMinutes = summary.totalFocusTimeMinutes
 
+        // Helper to get effective duration in ms
+        fun sessionDurationMs(s: com.adarshsingh.antidistraction.data.local.entity.FocusSessionEntity): Long {
+            return if (s.targetDurationMs > 0L) s.targetDurationMs else maxOf(0L, (s.actualEndTimeMs ?: s.startTimeMs) - s.startTimeMs)
+        }
+
         // Check for early morning session (< 8 AM)
         val hasEarlySession = completedSessions.any { session ->
             val cal = Calendar.getInstance().apply { timeInMillis = session.startTimeMs }
@@ -50,8 +56,14 @@ class FocusBadgeEngine @Inject constructor(
 
         // Long session check (>= 60 mins)
         val hasLongSession = completedSessions.any { session ->
-            session.targetDurationMs >= 60 * 60 * 1000L
+            sessionDurationMs(session) >= 60 * 60 * 1000L
         }
+
+        // Challenge mode sessions
+        val challengeSessions = completedSessions.filter { it.focusMode == FocusMode.CHALLENGE }
+        val hasChallengeSession = challengeSessions.isNotEmpty()
+        val hasLongChallenge = challengeSessions.any { sessionDurationMs(it) >= 45 * 60 * 1000L }
+        val hasTitanChallenge = challengeSessions.any { sessionDurationMs(it) >= 90 * 60 * 1000L }
 
         // Perfect session check (0 interventions)
         val hasPerfectSession = completedSessions.any { session ->
@@ -164,6 +176,30 @@ class FocusBadgeEngine @Inject constructor(
                 iconEmoji = "🏆",
                 isUnlocked = scoreDetails.totalScore >= 100,
                 progressText = if (scoreDetails.totalScore >= 100) "Unlocked!" else "${scoreDetails.totalScore}/100 score"
+            ),
+            FocusBadge(
+                id = "CHALLENGER",
+                title = "Challenger Spirit",
+                description = "Complete an open-ended Challenge Mode focus session.",
+                iconEmoji = "🌟",
+                isUnlocked = hasChallengeSession,
+                progressText = if (hasChallengeSession) "Unlocked!" else "0/1 challenge completed"
+            ),
+            FocusBadge(
+                id = "ENDURANCE_WARRIOR",
+                title = "Endurance Warrior",
+                description = "Complete a 45+ minute continuous Challenge Mode marathon.",
+                iconEmoji = "⚔️",
+                isUnlocked = hasLongChallenge,
+                progressText = if (hasLongChallenge) "Unlocked!" else "0/1 45m challenge"
+            ),
+            FocusBadge(
+                id = "TITAN_OF_WILL",
+                title = "Titan of Will",
+                description = "Conquer a 90+ minute continuous Challenge Mode endurance test.",
+                iconEmoji = "👑",
+                isUnlocked = hasTitanChallenge,
+                progressText = if (hasTitanChallenge) "Unlocked!" else "0/1 90m challenge"
             )
         )
     }

@@ -54,7 +54,7 @@ class FocusSessionEngine @Inject constructor(
             val isChallenge = mode == FocusMode.CHALLENGE || durationMinutes == 0
             val durationMs = if (isChallenge) 0L else durationMinutes * 60 * 1000L
             val activeProfileId = 1L
-            val sessionId = sessionRepository.createSession(activeProfileId, durationMs)
+            val sessionId = sessionRepository.createSession(activeProfileId, durationMs, mode)
 
             val startTime = System.currentTimeMillis()
             pausedTimeAccumulatedMs = 0L

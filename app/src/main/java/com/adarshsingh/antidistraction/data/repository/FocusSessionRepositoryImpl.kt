@@ -16,10 +16,7 @@ class FocusSessionRepositoryImpl @Inject constructor(
     private val profileDao: FocusProfileDao
 ) : FocusSessionRepository {
 
-    override suspend fun createSession(profileId: Long, durationMs: Long): Long {
-        val profile = profileDao.getProfileById(profileId)
-        val mode = profile?.mode ?: FocusMode.DEEP_FOCUS
-
+    override suspend fun createSession(profileId: Long, durationMs: Long, mode: FocusMode): Long {
         val entity = FocusSessionEntity(
             profileId = profileId,
             focusMode = mode,
@@ -32,9 +29,17 @@ class FocusSessionRepositoryImpl @Inject constructor(
 
     override suspend fun updateSessionState(sessionId: Long, state: FocusState, actualEndTimeMs: Long?) {
         val session = sessionDao.getSessionById(sessionId) ?: return
+        val finalEndTime = actualEndTimeMs ?: session.actualEndTimeMs
+        val calculatedDuration = if (session.targetDurationMs == 0L && finalEndTime != null) {
+            maxOf(0L, finalEndTime - session.startTimeMs)
+        } else {
+            session.targetDurationMs
+        }
+
         val updated = session.copy(
             state = state,
-            actualEndTimeMs = actualEndTimeMs ?: session.actualEndTimeMs
+            targetDurationMs = calculatedDuration,
+            actualEndTimeMs = finalEndTime
         )
         sessionDao.updateSession(updated)
     }

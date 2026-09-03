@@ -245,8 +245,12 @@ fun FocusScreen(
     // STEP 1: Streak Protection Warning
     if (showStep1Confirmation) {
         CalmDialog(
-            title = "🔥 Break Focus Streak? (Step 1 of 3)",
-            message = "You are currently in an active ${sessionState.mode.name.replace("_", " ")} session. Stopping now will interrupt your focus momentum.\n\nAre you sure you want to proceed to session end?",
+            title = if (isChallengeActive) "🏆 Finish Challenge Focus? (Step 1 of 3)" else "🔥 Break Focus Streak? (Step 1 of 3)",
+            message = if (isChallengeActive) {
+                "You are currently running an open-ended Challenge Mode session. Are you ready to lock in your score and finish?"
+            } else {
+                "You are currently in an active ${sessionState.mode.name.replace("_", " ")} session. Stopping now will interrupt your focus momentum.\n\nAre you sure you want to proceed to session end?"
+            },
             confirmText = "Proceed to Step 2 >",
             dismissText = "Keep Focusing 💪",
             isDanger = false,
@@ -261,11 +265,15 @@ fun FocusScreen(
     // STEP 2: Focus Time Impact Warning
     if (showStep2Confirmation) {
         CalmDialog(
-            title = "⏳ Confirm Early Session Exit (Step 2 of 3)",
-            message = "Current Focus Time: $formattedTime\n\nQuitting early will record an incomplete session in your statistics and lower your daily Focus Score. Are you really sure?",
+            title = if (isChallengeActive) "⏱️ Lock in Challenge Record (Step 2 of 3)" else "⏳ Confirm Early Session Exit (Step 2 of 3)",
+            message = if (isChallengeActive) {
+                "Current Focus Time: $formattedTime\n\nFinishing will record this challenge as COMPLETED in your history, update your focus stats, and unlock achievements! Ready to verify?"
+            } else {
+                "Current Focus Time: $formattedTime\n\nQuitting early will record an incomplete session in your statistics and lower your daily Focus Score. Are you really sure?"
+            },
             confirmText = "Continue to Verification >",
             dismissText = "Stay in Focus",
-            isDanger = true,
+            isDanger = !isChallengeActive,
             onConfirm = {
                 showStep2Confirmation = false
                 showStep3Confirmation = true
@@ -281,14 +289,22 @@ fun FocusScreen(
 
         CalmDialog(
             title = "🛡️ Final Verification Required (Step 3 of 3)",
-            message = "To prevent impulse or accidental quitting, please type 'END' in capital letters below to confirm ending your focus session:",
-            confirmText = if (isVerified) "Complete Session" else "Type 'END' to Enable",
+            message = if (isChallengeActive) {
+                "Type 'END' in capital letters below to confirm completing your Challenge Mode session:"
+            } else {
+                "To prevent impulse or accidental quitting, please type 'END' in capital letters below to confirm ending your focus session:"
+            },
+            confirmText = if (isVerified) (if (isChallengeActive) "Finish Challenge 🏆" else "Complete Session") else "Type 'END' to Enable",
             dismissText = "Cancel & Stay Focused",
-            isDanger = true,
+            isDanger = !isChallengeActive,
             onConfirm = {
                 if (isVerified) {
                     showStep3Confirmation = false
-                    viewModel.abandonSession()
+                    if (isChallengeActive) {
+                        viewModel.completeSession()
+                    } else {
+                        viewModel.abandonSession()
+                    }
                 }
             },
             onDismiss = { showStep3Confirmation = false }

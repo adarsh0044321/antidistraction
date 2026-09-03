@@ -13,6 +13,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.adarshsingh.antidistraction.ui.theme.AccentError
 
@@ -30,10 +31,10 @@ fun CalmButton(
     modifier: Modifier = Modifier,
     variant: CalmButtonVariant = CalmButtonVariant.PRIMARY,
     enabled: Boolean = true,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
 ) {
     val shape = RoundedCornerShape(12.dp)
-    val contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
 
     when (variant) {
         CalmButtonVariant.PRIMARY -> {
@@ -55,7 +56,12 @@ fun CalmButton(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(text = text, style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
@@ -77,7 +83,12 @@ fun CalmButton(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(text = text, style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
@@ -88,7 +99,13 @@ fun CalmButton(
                 enabled = enabled && !isLoading,
                 contentPadding = contentPadding
             ) {
-                Text(text = text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
         CalmButtonVariant.DANGER -> {
@@ -103,7 +120,12 @@ fun CalmButton(
                 ),
                 contentPadding = contentPadding
             ) {
-                Text(text = text, style = MaterialTheme.typography.labelSmall)
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

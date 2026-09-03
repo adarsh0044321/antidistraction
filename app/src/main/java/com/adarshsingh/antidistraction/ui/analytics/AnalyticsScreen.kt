@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -127,7 +128,10 @@ fun AnalyticsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = "Achievements",
@@ -148,10 +152,11 @@ fun AnalyticsScreen(
                                 )
                             }
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
                         CalmButton(
                             text = "View",
                             onClick = { showAchievementsModal = true },
-                            variant = CalmButtonVariant.SECONDARY
+                            variant = CalmButtonVariant.PRIMARY
                         )
                     }
                 }
@@ -329,11 +334,13 @@ fun AnalyticsScreen(
                         modifier = Modifier.padding(16.dp)
                     )
                 } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 420.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        displayList.forEach { badge ->
+                        items(displayList, key = { it.id }) { badge ->
                             CalmCard(
                                 modifier = Modifier.clickable { selectedBadgeDetail = badge }
                             ) {
@@ -361,7 +368,7 @@ fun AnalyticsScreen(
                                         Text(
                                             text = badge.progressText,
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = if (badge.isUnlocked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary
+                                            color = if (badge.isUnlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
                                         )
                                     }
                                 }

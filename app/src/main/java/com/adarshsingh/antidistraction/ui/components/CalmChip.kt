@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -33,7 +33,7 @@ fun CalmChip(
         MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(10.dp)
 
     Box(
         modifier = modifier
@@ -41,16 +41,18 @@ fun CalmChip(
             .background(backgroundColor)
             .border(
                 width = if (isSelected) 0.dp else 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                 shape = shape
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = textColor
+            style = MaterialTheme.typography.labelMedium,
+            color = textColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

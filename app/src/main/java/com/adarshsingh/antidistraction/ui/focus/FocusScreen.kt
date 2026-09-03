@@ -149,7 +149,7 @@ fun FocusScreen(
                         )
                     }
 
-                    // Preset Chips + Custom Button + Challenge Chip
+                    // Preset Chips + Custom Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -157,31 +157,22 @@ fun FocusScreen(
                         listOf(15, 25, 45, 60).forEach { mins ->
                             CalmChip(
                                 text = "$mins m",
-                                isSelected = selectedMode != FocusMode.CHALLENGE && selectedDurationMinutes == mins,
+                                isSelected = selectedDurationMinutes == mins,
                                 onClick = {
-                                    if (selectedMode == FocusMode.CHALLENGE) selectedMode = FocusMode.DEEP_FOCUS
                                     selectedDurationMinutes = mins
                                 }
                             )
                         }
                         CalmChip(
-                            text = "🏆 Challenge",
-                            isSelected = selectedMode == FocusMode.CHALLENGE,
-                            onClick = {
-                                selectedMode = FocusMode.CHALLENGE
-                                selectedDurationMinutes = 0
-                            }
-                        )
-                        CalmChip(
                             text = "+",
-                            isSelected = selectedMode != FocusMode.CHALLENGE && selectedDurationMinutes !in listOf(15, 25, 45, 60),
+                            isSelected = selectedDurationMinutes !in listOf(15, 25, 45, 60),
                             onClick = { showCustomDialog = true }
                         )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (selectedMode == FocusMode.CHALLENGE) "Selected Mode: Challenge (Endless Stopwatch Focus)" else "Selected Duration: $selectedDurationMinutes mins (${selectedDurationMinutes / 60}h ${selectedDurationMinutes % 60}m)",
+                        text = "Selected Duration: $selectedDurationMinutes mins (${selectedDurationMinutes / 60}h ${selectedDurationMinutes % 60}m)",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -195,12 +186,41 @@ fun FocusScreen(
             ) {
                 when (sessionState.state) {
                     FocusState.IDLE, FocusState.FOCUS_COMPLETED, FocusState.FOCUS_ABANDONED -> {
-                        CalmButton(
-                            text = if (selectedMode == FocusMode.CHALLENGE) "Start Challenge Mode" else "Start Focus",
-                            onClick = { viewModel.startSession(selectedDurationMinutes, selectedMode) },
-                            variant = CalmButtonVariant.PRIMARY,
-                            modifier = Modifier.fillMaxWidth(0.8f)
-                        )
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.startSession(0, FocusMode.CHALLENGE)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.85f)
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                ),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = "🏆 Start Open-Ended Challenge",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            CalmButton(
+                                text = "Start Focus (${selectedDurationMinutes}m)",
+                                onClick = { viewModel.startSession(selectedDurationMinutes, selectedMode) },
+                                variant = CalmButtonVariant.PRIMARY,
+                                modifier = Modifier.fillMaxWidth(0.85f)
+                            )
+                        }
                     }
                     FocusState.FOCUS_ACTIVE, FocusState.RESUMED -> {
                         CalmButton(
@@ -251,7 +271,7 @@ fun FocusScreen(
             } else {
                 "You are currently in an active ${sessionState.mode.name.replace("_", " ")} session. Stopping now will interrupt your focus momentum.\n\nAre you sure you want to proceed to session end?"
             },
-            confirmText = "Proceed to Step 2 >",
+            confirmText = "Continue",
             dismissText = "Keep Focusing 💪",
             isDanger = false,
             onConfirm = {
@@ -271,7 +291,7 @@ fun FocusScreen(
             } else {
                 "Current Focus Time: $formattedTime\n\nQuitting early will record an incomplete session in your statistics and lower your daily Focus Score. Are you really sure?"
             },
-            confirmText = "Continue to Verification >",
+            confirmText = "Continue",
             dismissText = "Stay in Focus",
             isDanger = !isChallengeActive,
             onConfirm = {

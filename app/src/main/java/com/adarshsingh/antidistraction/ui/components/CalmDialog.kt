@@ -1,6 +1,7 @@
 package com.adarshsingh.antidistraction.ui.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -73,6 +74,7 @@ fun CalmDialog(
                             text = dismissText,
                             onClick = onDismiss,
                             variant = CalmButtonVariant.TEXT,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -82,6 +84,7 @@ fun CalmDialog(
                         text = confirmText,
                         onClick = onConfirm,
                         variant = if (isDanger) CalmButtonVariant.DANGER else CalmButtonVariant.PRIMARY,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                         modifier = Modifier.weight(1f)
                     )
                 }

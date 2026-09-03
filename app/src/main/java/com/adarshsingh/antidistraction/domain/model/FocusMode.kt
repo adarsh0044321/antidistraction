@@ -5,5 +5,6 @@ enum class FocusMode {
     STUDY,
     WORK,
     LIGHT_FOCUS,
-    CUSTOM
+    CUSTOM,
+    CHALLENGE
 }

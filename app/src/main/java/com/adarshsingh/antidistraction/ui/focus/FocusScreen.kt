@@ -2,6 +2,7 @@ package com.adarshsingh.antidistraction.ui.focus
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,24 +45,32 @@ fun FocusScreen(
 ) {
     val sessionState by viewModel.sessionState.collectAsState()
 
-    // Top-level state holders for Dialogs & Controls
     var selectedDurationMinutes by remember { mutableStateOf(25) }
     var selectedMode by remember { mutableStateOf(FocusMode.DEEP_FOCUS) }
-    var showAbandonDialog by remember { mutableStateOf(false) }
+
+    // Multi-Step Confirmation Dialog States
+    var showStep1Confirmation by remember { mutableStateOf(false) }
+    var showStep2Confirmation by remember { mutableStateOf(false) }
+    var showStep3Confirmation by remember { mutableStateOf(false) }
+    var verificationTextInput by remember { mutableStateOf("") }
+
     var showCustomDialog by remember { mutableStateOf(false) }
     var showStylePicker by remember { mutableStateOf(false) }
 
-    val remainingMinutes = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
-        selectedDurationMinutes
+    val isChallengeActive = sessionState.mode == FocusMode.CHALLENGE || (sessionState.state != FocusState.IDLE && sessionState.targetDurationMs == 0L)
+
+    val formattedTime = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
+        if (selectedMode == FocusMode.CHALLENGE) "∞ Open" else String.format(Locale.getDefault(), "%02d:00", selectedDurationMinutes)
+    } else if (isChallengeActive) {
+        val hours = sessionState.remainingSeconds / 3600
+        val mins = (sessionState.remainingSeconds % 3600) / 60
+        val secs = sessionState.remainingSeconds % 60
+        if (hours > 0) String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, mins, secs) else String.format(Locale.getDefault(), "%02d:%02d", mins, secs)
     } else {
-        sessionState.remainingSeconds / 60
+        val remainingMinutes = sessionState.remainingSeconds / 60
+        val remainingSecs = sessionState.remainingSeconds % 60
+        String.format(Locale.getDefault(), "%02d:%02d", remainingMinutes, remainingSecs)
     }
-    val remainingSecs = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) {
-        0
-    } else {
-        sessionState.remainingSeconds % 60
-    }
-    val formattedTime = String.format(Locale.getDefault(), "%02d:%02d", remainingMinutes, remainingSecs)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -87,7 +96,7 @@ fun FocusScreen(
             ) {
                 Text(
                     text = when (sessionState.state) {
-                        FocusState.FOCUS_ACTIVE, FocusState.RESUMED -> sessionState.mode.name.replace("_", " ")
+                        FocusState.FOCUS_ACTIVE, FocusState.RESUMED -> if (isChallengeActive) "CHALLENGE MODE ACTIVE 🏆" else sessionState.mode.name.replace("_", " ")
                         FocusState.PAUSED -> "SESSION PAUSED"
                         FocusState.FOCUS_COMPLETED -> "SESSION COMPLETED"
                         FocusState.FOCUS_ABANDONED -> "SESSION ENDED"
@@ -109,11 +118,11 @@ fun FocusScreen(
             // Radial Timer Centerpiece
             CalmTimerDisplay(
                 remainingTimeText = formattedTime,
-                progressFraction = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED) 1.0f else sessionState.progressFraction,
+                progressFraction = if (sessionState.state == FocusState.IDLE || sessionState.state == FocusState.FOCUS_COMPLETED || sessionState.state == FocusState.FOCUS_ABANDONED || isChallengeActive) 1.0f else sessionState.progressFraction,
                 statusLabel = when (sessionState.state) {
-                    FocusState.FOCUS_ACTIVE, FocusState.RESUMED -> "Focusing"
+                    FocusState.FOCUS_ACTIVE, FocusState.RESUMED -> if (isChallengeActive) "Stopwatch Active" else "Focusing"
                     FocusState.PAUSED -> "Paused"
-                    else -> "$selectedDurationMinutes min"
+                    else -> if (selectedMode == FocusMode.CHALLENGE) "Challenge Mode" else "$selectedDurationMinutes min"
                 }
             )
 
@@ -140,7 +149,7 @@ fun FocusScreen(
                         )
                     }
 
-                    // Preset Chips + Custom Button
+                    // Preset Chips + Custom Button + Challenge Chip
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -148,20 +157,31 @@ fun FocusScreen(
                         listOf(15, 25, 45, 60).forEach { mins ->
                             CalmChip(
                                 text = "$mins m",
-                                isSelected = selectedDurationMinutes == mins,
-                                onClick = { selectedDurationMinutes = mins }
+                                isSelected = selectedMode != FocusMode.CHALLENGE && selectedDurationMinutes == mins,
+                                onClick = {
+                                    if (selectedMode == FocusMode.CHALLENGE) selectedMode = FocusMode.DEEP_FOCUS
+                                    selectedDurationMinutes = mins
+                                }
                             )
                         }
                         CalmChip(
+                            text = "🏆 Challenge",
+                            isSelected = selectedMode == FocusMode.CHALLENGE,
+                            onClick = {
+                                selectedMode = FocusMode.CHALLENGE
+                                selectedDurationMinutes = 0
+                            }
+                        )
+                        CalmChip(
                             text = "+",
-                            isSelected = selectedDurationMinutes !in listOf(15, 25, 45, 60),
+                            isSelected = selectedMode != FocusMode.CHALLENGE && selectedDurationMinutes !in listOf(15, 25, 45, 60),
                             onClick = { showCustomDialog = true }
                         )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Selected Duration: $selectedDurationMinutes mins (${selectedDurationMinutes / 60}h ${selectedDurationMinutes % 60}m)",
+                        text = if (selectedMode == FocusMode.CHALLENGE) "Selected Mode: Challenge (Endless Stopwatch Focus)" else "Selected Duration: $selectedDurationMinutes mins (${selectedDurationMinutes / 60}h ${selectedDurationMinutes % 60}m)",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -176,7 +196,7 @@ fun FocusScreen(
                 when (sessionState.state) {
                     FocusState.IDLE, FocusState.FOCUS_COMPLETED, FocusState.FOCUS_ABANDONED -> {
                         CalmButton(
-                            text = "Start Focus",
+                            text = if (selectedMode == FocusMode.CHALLENGE) "Start Challenge Mode" else "Start Focus",
                             onClick = { viewModel.startSession(selectedDurationMinutes, selectedMode) },
                             variant = CalmButtonVariant.PRIMARY,
                             modifier = Modifier.fillMaxWidth(0.8f)
@@ -192,7 +212,7 @@ fun FocusScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         CalmButton(
                             text = "End Session",
-                            onClick = { showAbandonDialog = true },
+                            onClick = { showStep1Confirmation = true },
                             variant = CalmButtonVariant.DANGER,
                             modifier = Modifier.weight(1f)
                         )
@@ -207,7 +227,7 @@ fun FocusScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         CalmButton(
                             text = "End Session",
-                            onClick = { showAbandonDialog = true },
+                            onClick = { showStep1Confirmation = true },
                             variant = CalmButtonVariant.DANGER,
                             modifier = Modifier.weight(1f)
                         )
@@ -218,25 +238,85 @@ fun FocusScreen(
         }
     }
 
-    // 1. Abandon Session Confirmation Dialog
-    if (showAbandonDialog) {
+    // ─────────────────────────────────────────────────────────────
+    // MULTI-STEP CONFIRMATION SEQUENCE (3 STEPS TO PREVENT Premature Ending)
+    // ─────────────────────────────────────────────────────────────
+
+    // STEP 1: Streak Protection Warning
+    if (showStep1Confirmation) {
         CalmDialog(
-            title = "End Focus Session?",
-            message = "Ending your session early will be recorded locally in your statistics. Are you sure you want to abandon focus?",
-            confirmText = "End Session",
-            dismissText = "Keep Focusing",
-            isDanger = true,
+            title = "🔥 Break Focus Streak? (Step 1 of 3)",
+            message = "You are currently in an active ${sessionState.mode.name.replace("_", " ")} session. Stopping now will interrupt your focus momentum.\n\nAre you sure you want to proceed to session end?",
+            confirmText = "Proceed to Step 2 >",
+            dismissText = "Keep Focusing 💪",
+            isDanger = false,
             onConfirm = {
-                showAbandonDialog = false
-                viewModel.abandonSession()
+                showStep1Confirmation = false
+                showStep2Confirmation = true
             },
-            onDismiss = { showAbandonDialog = false }
+            onDismiss = { showStep1Confirmation = false }
         )
     }
 
-    // 2. Interactive Custom Duration Dialog
+    // STEP 2: Focus Time Impact Warning
+    if (showStep2Confirmation) {
+        CalmDialog(
+            title = "⏳ Confirm Early Session Exit (Step 2 of 3)",
+            message = "Current Focus Time: $formattedTime\n\nQuitting early will record an incomplete session in your statistics and lower your daily Focus Score. Are you really sure?",
+            confirmText = "Continue to Verification >",
+            dismissText = "Stay in Focus",
+            isDanger = true,
+            onConfirm = {
+                showStep2Confirmation = false
+                showStep3Confirmation = true
+                verificationTextInput = ""
+            },
+            onDismiss = { showStep2Confirmation = false }
+        )
+    }
+
+    // STEP 3: Final Verification Input ("END")
+    if (showStep3Confirmation) {
+        val isVerified = verificationTextInput.trim().equals("END", ignoreCase = false)
+
+        CalmDialog(
+            title = "🛡️ Final Verification Required (Step 3 of 3)",
+            message = "To prevent impulse or accidental quitting, please type 'END' in capital letters below to confirm ending your focus session:",
+            confirmText = if (isVerified) "Complete Session" else "Type 'END' to Enable",
+            dismissText = "Cancel & Stay Focused",
+            isDanger = true,
+            onConfirm = {
+                if (isVerified) {
+                    showStep3Confirmation = false
+                    viewModel.abandonSession()
+                }
+            },
+            onDismiss = { showStep3Confirmation = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlinedTextField(
+                    value = verificationTextInput,
+                    onValueChange = { verificationTextInput = it },
+                    label = { Text("Type 'END'") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CUSTOM DURATION & STYLE PICKER DIALOGS
+    // ─────────────────────────────────────────────────────────────
+
+    // Interactive Custom Duration Dialog
     if (showCustomDialog) {
-        var tempMinutes by remember { mutableStateOf(selectedDurationMinutes) }
+        var tempMinutes by remember { mutableStateOf(if (selectedDurationMinutes > 0) selectedDurationMinutes else 25) }
 
         CalmDialog(
             title = "Custom Focus Duration",
@@ -244,6 +324,7 @@ fun FocusScreen(
             confirmText = "Set ${tempMinutes}m",
             dismissText = "Cancel",
             onConfirm = {
+                selectedMode = FocusMode.DEEP_FOCUS
                 selectedDurationMinutes = tempMinutes
                 showCustomDialog = false
             },
@@ -253,23 +334,19 @@ fun FocusScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Large Prominent Duration Display
                 Text(
-                    text = "${tempMinutes} min (${tempMinutes / 60}h ${tempMinutes % 60}m)",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    text = "$tempMinutes min (${tempMinutes / 60}h ${tempMinutes % 60}m)",
+                    style = MaterialTheme.typography.displayLarge,
+                    color = MaterialTheme.colorScheme.primary
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Quick Hour/Minute Preset Chips
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    listOf(30, 90, 120, 180).forEach { mins ->
-                        val label = if (mins >= 60) "${mins / 60}h" else "${mins}m"
+                    listOf(30 to "30m", 60 to "1h", 120 to "2h", 180 to "3h").forEach { (mins, label) ->
                         CalmChip(
                             text = label,
                             isSelected = tempMinutes == mins,
@@ -316,7 +393,7 @@ fun FocusScreen(
         }
     }
 
-    // 3. Interactive Focus Style Switcher Dialog
+    // Interactive Focus Style Switcher Dialog
     if (showStylePicker) {
         CalmDialog(
             title = "Select Focus Profile",
@@ -341,14 +418,27 @@ fun FocusScreen(
                                 Text(
                                     text = mode.name.replace("_", " "),
                                     style = MaterialTheme.typography.titleLarge,
-                                    color = if (selectedMode == mode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = when (mode) {
+                                        FocusMode.DEEP_FOCUS -> "Maximum strictness. Block all distracting apps."
+                                        FocusMode.STUDY -> "High restriction with study tool allowances."
+                                        FocusMode.WORK -> "Balanced work mode with warning alerts."
+                                        FocusMode.LIGHT_FOCUS -> "Gentle reminders."
+                                        FocusMode.CUSTOM -> "Custom rule parameters."
+                                        FocusMode.CHALLENGE -> "Endless open-ended stopwatch focus."
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.tertiary
                                 )
                             }
                             CalmChip(
-                                text = if (selectedMode == mode) "Active ✓" else "Select",
+                                text = if (selectedMode == mode) "Selected" else "Select",
                                 isSelected = selectedMode == mode,
                                 onClick = {
                                     selectedMode = mode
+                                    if (mode == FocusMode.CHALLENGE) selectedDurationMinutes = 0
                                     showStylePicker = false
                                 }
                             )

@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.adarshsingh.antidistraction.MainActivity
 import com.adarshsingh.antidistraction.R
 import com.adarshsingh.antidistraction.domain.engine.FocusSessionEngine
+import com.adarshsingh.antidistraction.domain.model.FocusMode
 import com.adarshsingh.antidistraction.domain.model.FocusState
 import com.adarshsingh.antidistraction.util.Logger
 import dagger.hilt.android.AndroidEntryPoint
@@ -74,10 +75,18 @@ class FocusForegroundService : Service() {
             sessionEngine.sessionState.collectLatest { session ->
                 when (session.state) {
                     FocusState.FOCUS_ACTIVE, FocusState.RESUMED -> {
-                        val mins = session.remainingSeconds / 60
-                        val secs = session.remainingSeconds % 60
-                        val timeStr = String.format("%02d:%02d remaining", mins, secs)
-                        updateNotification("${session.mode.name.replace("_", " ")} Active", timeStr)
+                        if (session.mode == FocusMode.CHALLENGE || session.targetDurationMs == 0L) {
+                            val hours = session.remainingSeconds / 3600
+                            val mins = (session.remainingSeconds % 3600) / 60
+                            val secs = session.remainingSeconds % 60
+                            val timeStr = if (hours > 0) String.format("%02d:%02d:%02d elapsed", hours, mins, secs) else String.format("%02d:%02d elapsed", mins, secs)
+                            updateNotification("Challenge Focus Active 🏆", timeStr)
+                        } else {
+                            val mins = session.remainingSeconds / 60
+                            val secs = session.remainingSeconds % 60
+                            val timeStr = String.format("%02d:%02d remaining", mins, secs)
+                            updateNotification("${session.mode.name.replace("_", " ")} Active", timeStr)
+                        }
                     }
                     FocusState.PAUSED -> {
                         updateNotification("Focus Session Paused", "Tap to resume focus")

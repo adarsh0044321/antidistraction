@@ -101,6 +101,12 @@ class RestrictionEngine @Inject constructor(
                 reason = "Custom rule restriction.",
                 recommendedInterventionLevel = InterventionLevel.LEVEL_4
             )
+            FocusMode.CHALLENGE -> RestrictionResult(
+                packageName = packageName,
+                decision = RestrictionDecision.RESTRICTED,
+                reason = "Challenge Mode active. High protection enabled.",
+                recommendedInterventionLevel = InterventionLevel.LEVEL_5
+            )
         }
     }
 

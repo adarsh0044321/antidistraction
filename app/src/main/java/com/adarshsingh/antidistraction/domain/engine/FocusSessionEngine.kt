@@ -51,7 +51,8 @@ class FocusSessionEngine @Inject constructor(
 
     fun startSession(durationMinutes: Int, mode: FocusMode = FocusMode.DEEP_FOCUS) {
         scope.launch {
-            val durationMs = durationMinutes * 60 * 1000L
+            val isChallenge = mode == FocusMode.CHALLENGE || durationMinutes == 0
+            val durationMs = if (isChallenge) 0L else durationMinutes * 60 * 1000L
             val activeProfileId = 1L
             val sessionId = sessionRepository.createSession(activeProfileId, durationMs)
 
@@ -65,7 +66,7 @@ class FocusSessionEngine @Inject constructor(
                 mode = mode,
                 startTimeMs = startTime,
                 targetDurationMs = durationMs,
-                remainingSeconds = durationMinutes * 60L,
+                remainingSeconds = 0L,
                 progressFraction = 1.0f
             )
 
@@ -180,18 +181,26 @@ class FocusSessionEngine @Inject constructor(
 
         val now = System.currentTimeMillis()
         val totalElapsedMs = (now - current.startTimeMs) - pausedTimeAccumulatedMs
-        val remainingMs = current.targetDurationMs - totalElapsedMs
 
-        if (remainingMs <= 0) {
-            completeSession()
-        } else {
-            val remainingSec = remainingMs / 1000L
-            val progressFraction = remainingMs.toFloat() / current.targetDurationMs.toFloat()
-
+        if (current.mode == FocusMode.CHALLENGE || current.targetDurationMs == 0L) {
+            val elapsedSec = totalElapsedMs / 1000L
             _sessionState.value = current.copy(
-                remainingSeconds = remainingSec,
-                progressFraction = progressFraction.coerceIn(0f, 1f)
+                remainingSeconds = elapsedSec,
+                progressFraction = 1.0f
             )
+        } else {
+            val remainingMs = current.targetDurationMs - totalElapsedMs
+            if (remainingMs <= 0) {
+                completeSession()
+            } else {
+                val remainingSec = remainingMs / 1000L
+                val progressFraction = remainingMs.toFloat() / current.targetDurationMs.toFloat()
+
+                _sessionState.value = current.copy(
+                    remainingSeconds = remainingSec,
+                    progressFraction = progressFraction.coerceIn(0f, 1f)
+                )
+            }
         }
     }
 
@@ -201,13 +210,16 @@ class FocusSessionEngine @Inject constructor(
             if (activeSession != null) {
                 val now = System.currentTimeMillis()
                 val elapsed = now - activeSession.startTimeMs
-                val remainingMs = activeSession.targetDurationMs - elapsed
+                val isChallenge = activeSession.focusMode == FocusMode.CHALLENGE || activeSession.targetDurationMs == 0L
 
-                if (remainingMs <= 0) {
+                if (!isChallenge && activeSession.targetDurationMs - elapsed <= 0) {
                     sessionRepository.updateSessionState(activeSession.id, FocusState.FOCUS_COMPLETED, actualEndTimeMs = now)
                     userPreferencesRepository.setCurrentFocusState(FocusState.IDLE)
                     _sessionState.value = FocusSessionState(state = FocusState.IDLE)
                 } else {
+                    val remainingOrElapsedSec = if (isChallenge) elapsed / 1000L else (activeSession.targetDurationMs - elapsed) / 1000L
+                    val progressFraction = if (isChallenge) 1.0f else ((activeSession.targetDurationMs - elapsed).toFloat() / activeSession.targetDurationMs.toFloat()).coerceIn(0f, 1f)
+
                     val recoveredState = FocusSessionState(
                         state = activeSession.state,
                         sessionId = activeSession.id,
@@ -215,15 +227,15 @@ class FocusSessionEngine @Inject constructor(
                         mode = activeSession.focusMode,
                         startTimeMs = activeSession.startTimeMs,
                         targetDurationMs = activeSession.targetDurationMs,
-                        remainingSeconds = remainingMs / 1000L,
-                        progressFraction = remainingMs.toFloat() / activeSession.targetDurationMs.toFloat()
+                        remainingSeconds = remainingOrElapsedSec,
+                        progressFraction = progressFraction
                     )
                     _sessionState.value = recoveredState
 
                     if (activeSession.state == FocusState.FOCUS_ACTIVE || activeSession.state == FocusState.RESUMED) {
                         startTimerLoop()
                     }
-                    Logger.i("FocusSessionEngine", "Recovered session ${activeSession.id} with ${remainingMs / 1000L}s remaining")
+                    Logger.i("FocusSessionEngine", "Recovered session ${activeSession.id} with ${remainingOrElapsedSec}s remaining/elapsed")
                 }
             } else {
                 _sessionState.value = FocusSessionState(state = FocusState.IDLE)
